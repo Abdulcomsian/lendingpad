@@ -28,7 +28,8 @@ class HomeController extends Controller
 
             // Sending Email
             $to_Email = env('TO_EMAIL');
-            Notification::route('mail', $to_Email)->notify(new JSONDataNotification($json_data));
+            // Notification::route('mail', $to_Email)->notify(new JSONDataNotification($json_data));
+            \Log::info($json_data);
             return response()->json(['message' => 'Request processed successfully'], 200);
         } catch (\Exception $e) {
             // Handle any errors that occur during processing
