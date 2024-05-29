@@ -23,6 +23,7 @@ class MeridianLinkService
     public function checkData($endpoint, $parameters = [])
     {
         try {
+            dd("123", $endpoint);
             $response = $this->client->request('POST', $endpoint, [
                 'query' => $parameters
             ]);
