@@ -45,7 +45,7 @@ class HomeController extends Controller
             'param1' => $request->input('param1'),
             'param2' => $request->input('param2'),
         ];
-
+        dd("132");
         $data = $this->meridianLinkService->checkData($endpoint, $parameters);
         dd('after', $data);
         return response()->json($data);
