@@ -16,6 +16,7 @@ class MeridianLinkService
             'headers' => [
                 'Authorization' => 'Base aWRlYWxsZW5kaW5nOnkxODMyMzdvIw==',
                 'Accept' => 'application/json',
+                'MCL-Interface' => 'SmartAPITestingIdentifier'
             ],
         ]);
     }
