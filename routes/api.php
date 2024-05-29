@@ -11,3 +11,4 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('fetch-api', [HomeController::class, 'fetchApi']);
+Route::post('meridian-check-data', [HomeController::class, 'checkData'])->name("check.data");
