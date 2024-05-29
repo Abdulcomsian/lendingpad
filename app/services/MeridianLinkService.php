@@ -28,8 +28,6 @@ class MeridianLinkService
                 'query' => $parameters
             ]);
 
-            dd($response);
-
             return json_decode($response->getBody()->getContents(), true);
         } catch (RequestException $e) {
             return [
