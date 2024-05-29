@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Notifications\JSONDataNotification;
 use Illuminate\Http\Request;
-use App\Services\MeridianLinkService;
+use App\services\MeridianLinkService;
 use Illuminate\Support\Facades\Notification;
 
 class HomeController extends Controller
