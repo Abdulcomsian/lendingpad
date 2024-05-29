@@ -39,7 +39,7 @@ class HomeController extends Controller
 
     public function checkData(Request $request)
     {
-        dd("123");
+        // dd("123");
         $endpoint = env('MERIDIANLINK_API_BASE_URI');
         $parameters = [
             'param1' => $request->input('param1'),
@@ -47,7 +47,7 @@ class HomeController extends Controller
         ];
 
         $data = $this->meridianLinkService->checkData($endpoint, $parameters);
-
+        dd('after', $data);
         return response()->json($data);
     }
 }
