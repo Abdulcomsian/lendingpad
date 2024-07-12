@@ -23,6 +23,7 @@ class HomeController extends Controller
         try {
             $json_data = $request->all();
             Log::info($json_data);
+
             $errors = [];
 
             $required_fields = ['borrowers'];
