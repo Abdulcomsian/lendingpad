@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\services\MeridianLinkService;
-use App\Notifications\JSONDataNotification;
-use Illuminate\Support\Facades\Notification;
 
 class HomeController extends Controller
 {
@@ -23,55 +21,70 @@ class HomeController extends Controller
     public function fetchApi(Request $request)
     {
         try {
-            $json_data = $request->json()->all();
+            $json_data = $request->all();
+            Log::info($json_data);
             $errors = [];
 
-            $required_fields = [
-                'borrowers',
-            ];
+            $required_fields = ['borrowers'];
 
             foreach ($required_fields as $field) {
-                if (!array_key_exists($field, $json_data)) {
+                if (!array_key_exists($field, $json_data[0])) {
                     $errors[] = 'Required field missing: ' . $field;
                 }
             }
 
-            if (array_key_exists('borrowers', $json_data) && !empty($json_data['borrowers'])) {
-                $borrower = $json_data['borrowers'][0];
+            $required_borrower_fields = [
+                'firstName',
+                'lastName',
+                'contacts' => ['email', 'mobilePhone'],
+            ];
 
-                $borrower_name = $borrower['firstName'] . ' ' . $borrower['lastName'];
-                $borrower_email = $borrower['contacts']['email'] ?? '';
-                $borrower_mobile = $borrower['contacts']['mobilePhone'] ?? '';
-
-                if (empty($borrower_name)) {
-                    $errors[] = 'Borrower name is required';
+            // Function to validate nested fields
+            function validate_fields($data, $fields, &$errors, $prefix = '')
+            {
+                foreach ($fields as $key => $value) {
+                    if (is_array($value)) {
+                        if (!array_key_exists($key, $data)) {
+                            $errors[] = "Required field missing: " . $prefix . $key;
+                        } else {
+                            validate_fields($data[$key], $value, $errors, $prefix . $key . '.');
+                        }
+                    } else {
+                        if (!array_key_exists($value, $data)) {
+                            $errors[] = "Required field missing: " . $prefix . $value;
+                        }
+                    }
                 }
-
-                if (empty($borrower_email)) {
-                    $errors[] = 'Borrower email is required';
-                }
-            } else {
-                $errors[] = 'Borrowers array is required and cannot be empty';
             }
 
-            if (!array_key_exists('dates', $json_data) || !array_key_exists('funded', $json_data['dates']) || is_null($json_data['dates']['funded'])) {
+            // Validate each borrower
+            if (array_key_exists('borrowers', $json_data[0])) {
+                foreach ($json_data[0]['borrowers'] as $index => $borrower) {
+                    validate_fields($borrower, $required_borrower_fields, $errors, "borrower $index: ");
+                }
+            }
+
+            // Validate funded date
+            if (!array_key_exists('dates', $json_data[0]) || !array_key_exists('funded', $json_data[0]['dates']) || is_null($json_data[0]['dates']['funded'])) {
                 $errors[] = 'funded date is required';
             }
 
+            // Log errors if any and return a response
             if (!empty($errors)) {
                 Log::error('Validation errors: ' . implode(', ', $errors));
                 return response()->json(['message' => 'Data received but not processed due to validation errors'], 200);
             }
 
+            $borrower = $json_data[0]['borrowers'][0];
             $data = [
-                'name' => $borrower_name,
-                'email' => $borrower_email,
-                'phone' => $borrower_mobile,
+                'name' => $borrower['firstName'] . ' ' . $borrower['lastName'],
+                'email' => $borrower['contacts']['email'],
+                'phone' => $borrower['contacts']['mobilePhone'],
                 'source' => 'affiliate',
-                'close_date' => $json_data['dates']['closed'] ?? '',
-                'affiliate_order_id' => $json_data['affiliate_order_id'] ?? '',
-                'affiliate_order_source' => $json_data['affiliate_order_source'] ?? '',
-                'comments' => $json_data['comments'] ?? '',
+                'close_date' => $json_data[0]['dates']['closed'] ?? '',
+                'affiliate_order_id' => $json_data[0]['affiliate_order_id'] ?? '',
+                'affiliate_order_source' => $json_data[0]['affiliate_order_source'] ?? '',
+                'comments' => $json_data[0]['comments'] ?? '',
                 'address_attributes' => [
                     'street1' => $borrower['currentAddress']['street'],
                     'street2' => $borrower['currentAddress']['street2'] ?? '',
@@ -79,9 +92,10 @@ class HomeController extends Controller
                     'state' => $borrower['currentAddress']['state'],
                     'zipcode' => $borrower['currentAddress']['zipCode'],
                 ],
-                'loan_number' => $json_data['loanNumber'] ?? '',
+                'loan_number' => $json_data[0]['loanNumber'] ?? '',
             ];
 
+            // Check for existing order
             $existingOrder = Order::where('loan_number', $data['loan_number'])->first();
             if ($existingOrder) {
                 Log::error('Order already exists for loan number: ' . $data['loan_number']);
@@ -134,6 +148,7 @@ class HomeController extends Controller
             return response()->json(['message' => 'Data received but an error occurred'], 200);
         }
     }
+
 
     public function checkData(Request $request)
     {
