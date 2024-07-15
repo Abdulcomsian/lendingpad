@@ -26,6 +26,10 @@ class HomeController extends Controller
 
             $errors = [];
 
+            if (!isset($json_data[0])) {
+                return response()->json(['message' => 'Data received but not processed due to invalid JSON structure'], 200);
+            }
+
             $required_fields = ['borrowers'];
 
             foreach ($required_fields as $field) {
@@ -73,7 +77,7 @@ class HomeController extends Controller
             // Log errors if any and return a response
             if (!empty($errors)) {
                 Log::error('Validation errors: ' . implode(', ', $errors));
-                return response()->json(['message' => 'Data received but not processed due to validation errors'], 200);
+                return response()->json(['message' => 'Data received but not processed due to validation errors', 'errors' => $errors], 200);
             }
 
             $borrower = $json_data[0]['borrowers'][0];
@@ -146,7 +150,7 @@ class HomeController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Exception occurred: ' . $e->getMessage());
-            return response()->json(['message' => 'Data received but an error occurred'], 200);
+            return response()->json(['message' => 'Data received but an error occurred', 'error' => $e->getMessage()], 200);
         }
     }
 
