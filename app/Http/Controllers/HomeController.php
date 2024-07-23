@@ -22,7 +22,6 @@ class HomeController extends Controller
     {
         try {
             $json_data = $request->all();
-            Log::info($json_data);
 
             $errors = [];
 
@@ -70,9 +69,9 @@ class HomeController extends Controller
             }
 
             // Validate funded date
-            if (!array_key_exists('dates', $json_data[0]) || !array_key_exists('funded', $json_data[0]['dates']) || is_null($json_data[0]['dates']['funded'])) {
+         /*   if (!array_key_exists('dates', $json_data[0]) || !array_key_exists('funded', $json_data[0]['dates']) || is_null($json_data[0]['dates']['funded'])) {
                 $errors[] = 'funded date is required';
-            }
+            } */
 
             // Log errors if any and return a response
             if (!empty($errors)) {
@@ -80,6 +79,7 @@ class HomeController extends Controller
                 return response()->json(['message' => 'Data received but not processed due to validation errors', 'errors' => $errors], 200);
             }
 
+if(isset($json_data[0]['borrowers']) && count($json_data[0]['borrowers'][0])>0){
             $borrower = $json_data[0]['borrowers'][0];
             $data = [
                 'name' => $borrower['firstName'] . ' ' . $borrower['lastName'],
@@ -148,6 +148,11 @@ class HomeController extends Controller
                 Log::error('API call failed: ' . $response->body());
                 return response()->json(['message' => 'Data received but failed to create order'], 200);
             }
+		}else{
+			
+			 Log::error('Borrower information not found:');
+			 return response()->json(['message' => 'Borrower information not found'], 200);
+		}
         } catch (\Exception $e) {
             Log::error('Exception occurred: ' . $e->getMessage());
             return response()->json(['message' => 'Data received but an error occurred', 'error' => $e->getMessage()], 200);
