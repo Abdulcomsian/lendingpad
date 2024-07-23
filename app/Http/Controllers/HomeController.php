@@ -18,69 +18,35 @@ class HomeController extends Controller
         $this->meridianLinkService = $meridianLinkService;
     }
 
+
     public function fetchApi(Request $request)
     {
         try {
-            $json_data = $request->all();
+            $json_data = $request->json()->all();
 
-            $errors = [];
-
-            if (!isset($json_data[0])) {
-                return response()->json(['message' => 'Data received but not processed due to invalid JSON structure'], 200);
+            if (!isset($json_data[0]['dates']) || !isset($json_data[0]['dates']['funded']) || is_null($json_data[0]['dates']['funded'])) {
+                Log::error('Funded Date is Required:');
+                return response()->json(['message' => 'Funded Date not found'], 200);
             }
 
-            $required_fields = ['borrowers'];
-
-            foreach ($required_fields as $field) {
-                if (!array_key_exists($field, $json_data[0])) {
-                    $errors[] = 'Required field missing: ' . $field;
-                }
+            if (!isset($json_data[0]['borrowers']) || count($json_data[0]['borrowers']) == 0) {
+                Log::error('Borrower information not found:');
+                return response()->json(['message' => 'Borrower information not found'], 200);
             }
 
-            $required_borrower_fields = [
-                'firstName',
-                'lastName',
-                'contacts' => ['email', 'mobilePhone'],
-            ];
-
-            // Function to validate nested fields
-            function validate_fields($data, $fields, &$errors, $prefix = '')
-            {
-                foreach ($fields as $key => $value) {
-                    if (is_array($value)) {
-                        if (!array_key_exists($key, $data)) {
-                            $errors[] = "Required field missing: " . $prefix . $key;
-                        } else {
-                            validate_fields($data[$key], $value, $errors, $prefix . $key . '.');
-                        }
-                    } else {
-                        if (!array_key_exists($value, $data)) {
-                            $errors[] = "Required field missing: " . $prefix . $value;
-                        }
-                    }
-                }
-            }
-
-            // Validate each borrower
-            if (array_key_exists('borrowers', $json_data[0])) {
-                foreach ($json_data[0]['borrowers'] as $index => $borrower) {
-                    validate_fields($borrower, $required_borrower_fields, $errors, "borrower $index: ");
-                }
-            }
-
-            // Validate funded date
-         /*   if (!array_key_exists('dates', $json_data[0]) || !array_key_exists('funded', $json_data[0]['dates']) || is_null($json_data[0]['dates']['funded'])) {
-                $errors[] = 'funded date is required';
-            } */
-
-            // Log errors if any and return a response
-            if (!empty($errors)) {
-                Log::error('Validation errors: ' . implode(', ', $errors));
-                return response()->json(['message' => 'Data received but not processed due to validation errors', 'errors' => $errors], 200);
-            }
-
-if(isset($json_data[0]['borrowers']) && count($json_data[0]['borrowers'][0])>0){
             $borrower = $json_data[0]['borrowers'][0];
+
+            if (
+                !isset($borrower['firstName']) || empty($borrower['firstName']) ||
+                !isset($borrower['lastName']) || empty($borrower['lastName']) ||
+                !isset($borrower['contacts']) ||
+                !isset($borrower['contacts']['email']) || empty($borrower['contacts']['email']) ||
+                !isset($borrower['contacts']['mobilePhone']) || empty($borrower['contacts']['mobilePhone'])
+            ) {
+                Log::error('Borrower required fields are missing or null:');
+                return response()->json(['message' => 'Borrower required fields are missing or null'], 200);
+            }
+
             $data = [
                 'name' => $borrower['firstName'] . ' ' . $borrower['lastName'],
                 'email' => $borrower['contacts']['email'],
@@ -148,11 +114,6 @@ if(isset($json_data[0]['borrowers']) && count($json_data[0]['borrowers'][0])>0){
                 Log::error('API call failed: ' . $response->body());
                 return response()->json(['message' => 'Data received but failed to create order'], 200);
             }
-		}else{
-			
-			 Log::error('Borrower information not found:');
-			 return response()->json(['message' => 'Borrower information not found'], 200);
-		}
         } catch (\Exception $e) {
             Log::error('Exception occurred: ' . $e->getMessage());
             return response()->json(['message' => 'Data received but an error occurred', 'error' => $e->getMessage()], 200);
