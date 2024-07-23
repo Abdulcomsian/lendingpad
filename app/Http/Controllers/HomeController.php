@@ -24,7 +24,7 @@ class HomeController extends Controller
         try {
             $json_data = $request->json()->all();
 
-            Log::info($json_data);
+            Log::info('Received JSON Data: ' . json_encode($json_data));
 
             if (!isset($json_data[0]['dates']) || !isset($json_data[0]['dates']['funded']) || is_null($json_data[0]['dates']['funded'])) {
                 Log::error('Funded Date is Required:');
