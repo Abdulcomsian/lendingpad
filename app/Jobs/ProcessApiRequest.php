@@ -68,7 +68,7 @@ class ProcessApiRequest implements ShouldQueue
                 'close_date' => $json_data[0]['dates']['closed'] ?? '',
                 'affiliate_order_id' => $json_data[0]['affiliate_order_id'] ?? '',
                 'affiliate_order_source' => $json_data[0]['affiliate_order_source'] ?? '',
-                'comments' => $json_data[0]['comments'] ?? '',
+                'comments' => $json_data[0]['loanOfficer']['name'] ?? '',
                 'address_attributes' => [
                     'street1' => $borrower['currentAddress']['street'],
                     'street2' => $borrower['currentAddress']['street2'] ?? '',
