@@ -89,8 +89,7 @@ class ProcessApiRequest implements ShouldQueue
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'X-Version' => '1.0',
-            ])->post('https://mu2-staging.myutilities.com/api/referral/orders', [
-                'token' => '2291af7239814c5f9d18f79f91b25889',
+            ])->post("https://portal.myutilities.com/api/referral/orders?token=4f19bad363ef46de9bf2cbc672a2fba8", [
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'phone' => $data['phone'],

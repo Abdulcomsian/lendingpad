@@ -31,4 +31,9 @@ return [
         ],
     ],
 
+    'myutilities' => [
+        'api_base_uri' => env('PRODUCTION'),
+        'api_token' => env('PRODUCTION_API_TOKEN'),
+    ],
+
 ];
