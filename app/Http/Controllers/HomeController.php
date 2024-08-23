@@ -44,4 +44,29 @@ class HomeController extends Controller
         dd('after', $data);
         return response()->json($data);
     }
+
+
+    public function meridianLink(Request $request){
+        // dd($request->all());
+        // Base64 Username and Password: aWRlYWxsZW5kaW5nOk44ITQ0cmhMeVQ=  | ideallending:N8!44rhLyT
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL,"https://demo.mortgagecreditlink.com/inetapi/request_products.aspx");
+        curl_setopt($ch, CURLOPT_USERPWD, "ideallending:N8!44rhLyT"); //Your credentials goes here
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS,
+                    "postvar1=value1&postvar2=value2&postvar3=value3");
+
+        // In real life you should use something like:
+        // curl_setopt($ch, CURLOPT_POSTFIELDS, 
+        //          http_build_query(array('postvar1' => 'value1')));
+
+        // Receive server response ...
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $server_output = curl_exec($ch);
+
+        curl_close($ch);
+
+    }
 }
